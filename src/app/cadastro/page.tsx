@@ -49,10 +49,19 @@ export default function CadastroPage() {
       return
     }
 
-    setMessage('Conta criada com sucesso! Redirecionando para o login...')
+    setMessage('Conta criada com sucesso! Redirecionando...')
+    const redirectDestino =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('redirect')
+        : null
+
     setTimeout(() => {
-      router.push('/login')
-    }, 1800)
+      if (redirectDestino) {
+        router.push(`/login?redirect=${encodeURIComponent(redirectDestino)}`)
+      } else {
+        router.push('/login')
+      }
+    }, 1500)
   }
 
   return (

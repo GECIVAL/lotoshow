@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GraficoMapaDezenas, {
@@ -20,13 +21,14 @@ const ABAS_LOTERIAS = [
 ];
 
 export default function EstatisticaPage() {
-  const [abaAtiva, setAbaAtiva] = useState("quina");
+  const [abaAtiva, setAbaAtiva] = useState("lotofacil");
   const [carregando, setCarregando] = useState(true);
+  const [precisaLogar, setPrecisaLogar] = useState(false);
   const [concursos, setConcursos] = useState<ConcursoGraficoItem[]>([]);
-  const [totalDezenas, setTotalDezenas] = useState(80);
-  const [blocoColunas, setBlocoColunas] = useState(10);
-  const [qtdJogoPadrao, setQtdJogoPadrao] = useState(15);
-  const [nomeLoteria, setNomeLoteria] = useState("Quina");
+  const [totalDezenas, setTotalDezenas] = useState(25);
+  const [blocoColunas, setBlocoColunas] = useState(5);
+  const [qtdJogoPadrao, setQtdJogoPadrao] = useState(20);
+  const [nomeLoteria, setNomeLoteria] = useState("Lotofácil");
   const [dezenasEscolhidas, setDezenasEscolhidas] = useState<number[]>([]);
 
   useEffect(() => {
@@ -34,6 +36,13 @@ export default function EstatisticaPage() {
       setCarregando(true);
       setDezenasEscolhidas([]);
       const resp = await carregarGraficoLoteriaAction(abaAtiva);
+      if (resp.precisaLogar) {
+        setPrecisaLogar(true);
+        setCarregando(false);
+        return;
+      }
+
+      setPrecisaLogar(false);
       if (resp.sucesso) {
         setConcursos(resp.concursos);
         setTotalDezenas(resp.config.totalDezenas);
@@ -90,7 +99,49 @@ export default function EstatisticaPage() {
           ))}
         </div>
 
-        {carregando ? (
+        {precisaLogar ? (
+          <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border-2 border-purple-200 shadow-md max-w-2xl mx-auto my-6 space-y-5">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 text-[var(--gj-roxo)] rounded-full flex items-center justify-center mx-auto text-3xl sm:text-4xl shadow-inner">
+              🔒
+            </div>
+
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                Área de Estatística Exclusiva para Membros
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2 max-w-lg mx-auto leading-relaxed">
+                Para visualizar o <strong>Gráfico Estatístico Oficial</strong> com os últimos <strong>300 concursos</strong>, blocos de 10x10 e somatórias de saídas da <strong>{nomeLoteria}</strong>, você precisa estar conectado em sua conta.
+              </p>
+              <p className="text-[11px] sm:text-xs text-green-700 font-extrabold mt-1">
+                ✓ O cadastro no Grande Jogada é 100% gratuito e libera todas as estatísticas oficiais!
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+              <Link
+                href="/login?redirect=/estatistica"
+                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow transition"
+              >
+                Fazer Login
+              </Link>
+              <Link
+                href="/cadastro?redirect=/estatistica"
+                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-[var(--gj-verde)] hover:bg-green-700 text-white font-extrabold text-sm shadow transition"
+              >
+                Cadastre-se Grátis
+              </Link>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                href="/"
+                className="text-xs text-gray-400 hover:text-gray-600 font-semibold transition"
+              >
+                ← Voltar para a Página Inicial
+              </Link>
+            </div>
+          </div>
+        ) : carregando ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 text-gray-500 font-bold">
             Carregando mapa dos 300 concursos oficiais de {nomeLoteria}...
           </div>

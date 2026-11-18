@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GraficoMapaDezenas from "@/components/GraficoMapaDezenas";
 import Link from "next/link";
 import {
   calcularSimulacaoLotofacilAction,
@@ -459,22 +458,28 @@ export default function LotofacilPage() {
               </div>
             </div>
 
-            {/* Gráfico Interativo de Dezenas com Blocos Vermelhos e Somatórias de 30 e 100 Concursos */}
-            {concursosBanco.length > 0 && (
-              <GraficoMapaDezenas
-                tituloLoteria="Lotofácil"
-                totalDezenas={25}
-                blocoColunas={5}
-                concursosDesc={concursosBanco}
-                dezenasSelecionadas={dezenasEscolhidas}
-                qtdNecessaria={qtdNecessaria}
-                onAlternarDezena={alternarDezenaUsuario}
-                onIrParaProximoPasso={() => {
-                  setErroAviso(null);
-                  setTela(2);
-                }}
-              />
-            )}
+            {/* Chamada para o Gráfico Estatístico Oficial na Aba de Estatística */}
+            <div className="bg-gradient-to-r from-purple-50 via-white to-purple-50 border border-purple-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-[var(--gj-roxo)] text-white flex items-center justify-center text-xl shrink-0 shadow-inner">
+                  📊
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm sm:text-base text-[var(--gj-roxo)]">
+                    Gráfico Estatístico Oficial — Últimos 300 Concursos
+                  </h4>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Consulte os mapas de dezenas 10x10, quadrantes e somatórias de saídas de 30 e 100 concursos na nossa aba exclusiva de <strong>Estatística</strong>.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/estatistica"
+                className="w-full sm:w-auto text-center bg-[var(--gj-roxo)] hover:bg-purple-900 text-white font-extrabold text-xs sm:text-sm px-5 py-2.5 rounded-xl whitespace-nowrap shadow transition"
+              >
+                Acessar Aba Estatística →
+              </Link>
+            </div>
 
             {/* Tabela de Concursos (Carregar junto com a 1ª Tela) */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5 overflow-hidden">

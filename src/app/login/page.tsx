@@ -29,7 +29,12 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    const redirectDestino =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('redirect') || '/dashboard'
+        : '/dashboard'
+
+    router.push(redirectDestino)
     router.refresh()
   }
 
