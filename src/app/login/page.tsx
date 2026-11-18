@@ -35,7 +35,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <div className="mb-4">
+          <Link href="/" className="text-xs font-semibold text-gray-500 hover:text-[var(--gj-roxo)]">
+            ← Voltar para a página inicial
+          </Link>
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-[var(--gj-roxo)]">Acessar Conta</h1>
           <p className="text-gray-500 text-sm mt-2">Entre para acessar as estatísticas e seus jogos.</p>

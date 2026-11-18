@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" fill="none">
+  <!-- Ícone Trevo Grande Jogada -->
+  <rect x="4" y="6" width="52" height="52" rx="14" fill="#5B1F5F"/>
+  <circle cx="23" cy="25" r="9" fill="#00A859"/>
+  <circle cx="37" cy="25" r="9" fill="#00A859"/>
+  <circle cx="23" cy="39" r="9" fill="#00A859"/>
+  <circle cx="37" cy="39" r="9" fill="#F28C28"/>
+  <path d="M30 20V44M18 32H42" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Texto da Marca -->
+  <text x="68" y="34" fill="#5B1F5F" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="22" letter-spacing="-0.5">GRANDE JOGADA</text>
+  <text x="69" y="51" fill="#00A859" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="13" letter-spacing="1.2">SISTEMA LOTÉRICO</text>
+</svg>
