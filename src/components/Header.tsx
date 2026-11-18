@@ -9,15 +9,15 @@ export default function Header() {
 
   return (
     <header className="w-full bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-        {/* Logo */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Logo ajustável para celular (h-9) e computador (h-12) */}
         <Link href="/" className="flex items-center shrink-0">
           <Image
             src="/logo.svg"
             alt="Grande Jogada - Sistema Lotérico"
             width={220}
             height={50}
-            className="h-12 w-auto object-contain"
+            className="h-9 sm:h-12 w-auto object-contain"
             priority
           />
         </Link>
@@ -32,17 +32,17 @@ export default function Header() {
           <Link href="/dashboard" className="hover:text-[var(--gj-roxo)] transition-colors whitespace-nowrap">ESTATÍSTICA</Link>
         </nav>
 
-        {/* Botões de Ação + Botão Menu Mobile/Tablet */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Botões de Ação + Botão Menu Celular/Tablet */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <Link
             href="/login"
-            className="text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors whitespace-nowrap"
+            className="text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md transition-colors whitespace-nowrap"
           >
             LOGIN
           </Link>
           <Link
             href="/cadastro"
-            className="text-xs sm:text-sm font-bold text-white bg-[var(--gj-verde)] hover:bg-green-700 px-4 py-2 rounded-md transition-colors whitespace-nowrap"
+            className="hidden sm:inline-block text-xs sm:text-sm font-bold text-white bg-[var(--gj-verde)] hover:bg-green-700 px-4 py-2 rounded-md transition-colors whitespace-nowrap"
           >
             CADASTRE-SE
           </Link>
@@ -64,15 +64,24 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Menu recolhível para telas médias e celulares */}
+      {/* Menu recolhível para celulares e tablets */}
       {menuAberto && (
-        <nav className="xl:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-gray-600 shadow-inner">
-          <Link href="/#sobre" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">SOBRE</Link>
-          <Link href="/#contato" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">ENTRAR EM CONTATO</Link>
-          <Link href="/#como-jogar" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">COMO JOGAR</Link>
-          <Link href="/#jogos" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">JOGOS</Link>
-          <Link href="/#planos" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">PLANOS</Link>
-          <Link href="/dashboard" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">ESTATÍSTICA</Link>
+        <nav className="xl:hidden bg-white border-t border-gray-100 px-4 py-3 space-y-3 shadow-inner">
+          <Link
+            href="/cadastro"
+            onClick={() => setMenuAberto(false)}
+            className="sm:hidden block w-full text-center text-xs font-bold text-white bg-[var(--gj-verde)] hover:bg-green-700 py-2.5 rounded-md transition-colors"
+          >
+            CADASTRE-SE GRÁTIS
+          </Link>
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-gray-600">
+            <Link href="/#sobre" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">SOBRE</Link>
+            <Link href="/#contato" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">ENTRAR EM CONTATO</Link>
+            <Link href="/#como-jogar" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">COMO JOGAR</Link>
+            <Link href="/#jogos" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">JOGOS</Link>
+            <Link href="/#planos" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">PLANOS</Link>
+            <Link href="/dashboard" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">ESTATÍSTICA</Link>
+          </div>
         </nav>
       )}
     </header>

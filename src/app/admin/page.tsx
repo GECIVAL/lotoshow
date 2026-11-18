@@ -4,31 +4,39 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   desbloquearCofreAction,
+  excluirMatrizDoCofreAction,
   salvarMatrizNoCofreAction,
+  sincronizar300ConcursosAction,
 } from "./actions";
 
-const MATRIZ_EXEMPLO_LOTOFACIL = [
-  [2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 19, 20],
-  [2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 15, 16, 17, 18, 19],
-  [1, 2, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19],
-  [1, 2, 4, 5, 6, 8, 10, 11, 12, 13, 14, 16, 17, 19, 20],
-  [2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 1],
-  [1, 2, 4, 5, 6, 7, 9, 10, 11, 13, 15, 16, 18, 19, 20],
-  [1, 3, 4, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 19, 20],
-  [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20],
-  [1, 3, 4, 5, 6, 8, 9, 10, 11, 13, 14, 15, 17, 18, 20],
-  [1, 3, 4, 5, 7, 9, 10, 11, 13, 14, 15, 16, 18, 19, 20],
-  [2, 3, 4, 5, 6, 7, 9, 11, 12, 14, 15, 16, 17, 18, 20],
-  [1, 2, 4, 5, 7, 8, 9, 11, 13, 14, 15, 17, 18, 19, 20],
-  [2, 3, 4, 5, 6, 8, 9, 10, 12, 14, 15, 16, 17, 19, 20],
-  [2, 3, 4, 5, 7, 8, 9, 11, 12, 13, 14, 15, 18, 19, 20],
-  [2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20],
-  [1, 2, 3, 5, 7, 8, 9, 10, 12, 13, 14, 16, 18, 19, 20],
-  [2, 3, 5, 6, 7, 8, 9, 10, 12, 13, 15, 17, 18, 19, 20],
-  [1, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 19, 20],
-  [1, 3, 4, 5, 6, 8, 9, 10, 12, 14, 15, 16, 17, 19, 20],
-  [1, 2, 3, 6, 7, 9, 10, 11, 13, 14, 15, 16, 18, 19, 20],
-];
+const SQL_CRIAR_TABELAS_300 = `CREATE TABLE IF NOT EXISTS resultados_lotofacil (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_megasena (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_quina (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_lotomania (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_diadesorte (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, mes_sorte VARCHAR(30), updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_duplasena (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, dezenas_sorteio_2 INT[], updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_timemania (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, time_coracao VARCHAR(80), updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_maismilionaria (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, trevos INT[], updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+CREATE TABLE IF NOT EXISTS resultados_supersete (concurso INT PRIMARY KEY, data_sorteio VARCHAR(20) NOT NULL, dezenas INT[] NOT NULL, updated_at TIMESTAMPTZ DEFAULT now() NOT NULL);
+ALTER TABLE resultados_lotofacil ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_megasena ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_quina ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_lotomania ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_diadesorte ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_duplasena ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_timemania ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_maismilionaria ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_supersete ENABLE ROW LEVEL SECURITY;`;
+
+interface StatusTabela300 {
+  loteria: string;
+  tabela: string;
+  sucesso: boolean;
+  totalNoBanco?: number;
+  ultimoConcurso?: number;
+  ultimaData?: string;
+  erro?: string;
+}
 
 interface MatrizResumo {
   id: number;
@@ -100,6 +108,11 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [matrizesSalvas, setMatrizesSalvas] = useState<MatrizResumo[]>([]);
 
+  const [tabelas300Criadas, setTabelas300Criadas] = useState(false);
+  const [itensStatus300, setItensStatus300] = useState<StatusTabela300[]>([]);
+  const [sincronizando300, setSincronizando300] = useState(false);
+  const [sqlCopiado, setSqlCopiado] = useState(false);
+
   const handleDesbloquear = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -114,17 +127,22 @@ export default function AdminPage() {
     }
 
     setMatrizesSalvas((resp.matrizes as MatrizResumo[]) || []);
+    if (resp.statusResultados) {
+      setTabelas300Criadas(resp.statusResultados.tabelasCriadas);
+      setItensStatus300(resp.statusResultados.itens as StatusTabela300[]);
+    }
     setDesbloqueado(true);
   };
 
-  const preencherExemploLotofacil = () => {
-    setLoteria("Lotofacil");
-    setNomeComercial("Fechamento Lotofácil 20 Dezenas");
-    setDezenas(20);
-    setCartoes(20);
-    setIgnorarColunaId(false);
-    setMatrizTexto(JSON.stringify(MATRIZ_EXEMPLO_LOTOFACIL));
-    setMensagem("");
+  const handleSincronizar300 = async () => {
+    setSincronizando300(true);
+    const resp = await sincronizar300ConcursosAction(senhaMestre);
+    setSincronizando300(false);
+
+    if (resp.statusResultados) {
+      setTabelas300Criadas(resp.statusResultados.tabelasCriadas);
+      setItensStatus300(resp.statusResultados.itens as StatusTabela300[]);
+    }
   };
 
   const handleSalvar = async () => {
@@ -240,16 +258,24 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setSenhaMestre("");
-                setDesbloqueado(false);
-              }}
-              className="text-xs font-bold text-red-600 hover:underline"
-            >
-              Trancar Cofre e Sair
-            </button>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="text-xs font-bold text-[var(--gj-roxo)] hover:underline"
+              >
+                ← Ver Site (Home)
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setSenhaMestre("");
+                  setDesbloqueado(false);
+                }}
+                className="text-xs font-bold text-red-600 hover:underline"
+              >
+                Trancar Cofre e Sair
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -307,28 +333,19 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                <label className="block text-sm font-bold text-gray-700">
-                  Matriz Fixa (Cole direto do Excel ou em JSON)
-                </label>
-                <button
-                  type="button"
-                  onClick={preencherExemploLotofacil}
-                  className="text-xs font-bold text-[var(--gj-roxo)] hover:underline"
-                >
-                  Preencher com sua Matriz Lotofácil (20 cartões)
-                </button>
-              </div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">
+                Matriz Fixa (Cole direto do Excel ou em JSON)
+              </label>
 
               <p className="text-xs text-gray-500 mb-2">
-                Você pode colar as linhas direto da sua planilha Excel (um jogo por linha) ou no formato JSON.
+                Cole as linhas direto da sua planilha Excel (um cartão por linha) ou em formato JSON. Os dados vão criptografados direto para o Cofre e não ficam no código-fonte.
               </p>
 
               <textarea
                 rows={7}
                 value={matrizTexto}
                 onChange={(e) => setMatrizTexto(e.target.value)}
-                placeholder="Cole aqui as linhas do Excel ou clique em 'Preencher com sua Matriz Lotofácil' acima..."
+                placeholder="Cole aqui as linhas da sua planilha Excel..."
                 className="w-full border border-gray-300 p-3 rounded-lg font-mono text-sm"
               />
 
@@ -383,21 +400,126 @@ export default function AdminPage() {
                   ? m.loterias[0]?.nome
                   : m.loterias?.nome;
                 return (
-                  <div key={m.id} className="py-3 flex items-center justify-between text-sm">
+                  <div key={m.id} className="py-3 flex items-center justify-between gap-3 text-sm">
                     <div>
                       <span className="font-bold text-[var(--gj-roxo)]">
                         {nomeLoteria || "Loteria"}
                       </span>{" "}
                       — <span className="font-semibold text-gray-800">{m.nome_comercial}</span>
+                      <span className="ml-2 text-gray-500 text-xs font-medium">
+                        ({m.qtd_dezenas_escolhidas} dezenas → {m.qtd_cartoes_gerados} cartões)
+                      </span>
                     </div>
-                    <div className="text-gray-500 text-xs font-medium">
-                      {m.qtd_dezenas_escolhidas} dezenas → {m.qtd_cartoes_gerados} cartões
-                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm(`Deseja remover a matriz "${m.nome_comercial}" do Cofre?`)) return;
+                        const resp = await excluirMatrizDoCofreAction({
+                          senhaMestre,
+                          matrizId: m.id,
+                        });
+                        if (resp.sucesso && resp.matrizes) {
+                          setMatrizesSalvas(resp.matrizes as MatrizResumo[]);
+                        }
+                      }}
+                      className="text-xs font-bold text-red-600 hover:underline shrink-0"
+                    >
+                      Remover
+                    </button>
                   </div>
                 );
               })}
             </div>
           )}
+        </div>
+
+        {/* Painel de Resultados Oficiais (300 Concursos Isolados por Loteria + Agendador 01:00 BRT) */}
+        <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 border border-gray-200 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">
+                Bancos Isolados dos Últimos 300 Concursos Oficiais
+              </h2>
+              <p className="text-xs text-gray-500">
+                Atualização automática agendada todos os dias às{" "}
+                <strong>01:00 (Horário de Brasília)</strong>. Cada loteria mantém
+                sua própria tabela exclusiva com os 300 sorteios mais recentes.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSincronizar300}
+              disabled={sincronizando300}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-lg transition disabled:opacity-50"
+            >
+              {sincronizando300
+                ? "Baixando 300 Concursos de cada Loteria..."
+                : "🔄 Carregar / Atualizar 300 Concursos Agora"}
+            </button>
+          </div>
+
+          {!tabelas300Criadas && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-2">
+              <p className="text-xs sm:text-sm font-bold text-amber-900">
+                ⚠️ Primeiro uso: clique no botão abaixo para copiar o comando de criação das 9 tabelas isoladas, cole no SQL Editor do Supabase e clique em Run. Depois clique em &quot;Carregar / Atualizar 300 Concursos Agora&quot;!
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(SQL_CRIAR_TABELAS_300);
+                  setSqlCopiado(true);
+                  setTimeout(() => setSqlCopiado(false), 3000);
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-4 py-2 rounded-md transition"
+              >
+                {sqlCopiado
+                  ? "SQL Copiado! Cole no SQL Editor do Supabase ✓"
+                  : "Copiar SQL das 9 Tabelas Isoladas"}
+              </button>
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-600">
+                  <th className="py-2 pr-3">Loteria</th>
+                  <th className="py-2 pr-3">Tabela Exclusiva</th>
+                  <th className="py-2 pr-3">Qtd. no Banco</th>
+                  <th className="py-2 pr-3">Último Concurso</th>
+                  <th className="py-2">Data do Sorteio</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {itensStatus300.map((it) => (
+                  <tr key={it.tabela}>
+                    <td className="py-2 pr-3 font-bold text-gray-800">{it.loteria}</td>
+                    <td className="py-2 pr-3 font-mono text-xs text-gray-500">{it.tabela}</td>
+                    <td className="py-2 pr-3 font-bold">
+                      {it.sucesso ? (
+                        <span
+                          className={
+                            (it.totalNoBanco ?? 0) >= 300
+                              ? "text-green-700"
+                              : "text-amber-600"
+                          }
+                        >
+                          {it.totalNoBanco ?? 0} / 300
+                        </span>
+                      ) : (
+                        <span className="text-red-600">Tabela pendente</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3 font-semibold text-gray-700">
+                      {it.ultimoConcurso ?? "-"}
+                    </td>
+                    <td className="py-2 text-gray-600">{it.ultimaData ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

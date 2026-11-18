@@ -4,6 +4,10 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  consultarStatusTabelas300,
+  sincronizarTodasAsLoterias300,
+} from "@/lib/loterias/sincronizador";
 
 /**
  * Obtém a Senha Mestre preservando caracteres especiais como # e $ no .env.local
@@ -87,7 +91,13 @@ export async function desbloquearCofreAction(senhaMestre: string) {
       return { sucesso: false, erro: "Erro ao consultar o Cofre: " + error.message };
     }
 
-    return { sucesso: true, matrizes: matrizes ?? [] };
+    const statusResultados = await consultarStatusTabelas300();
+
+    return {
+      sucesso: true,
+      matrizes: matrizes ?? [],
+      statusResultados,
+    };
   } catch (e: unknown) {
     const mensagem = e instanceof Error ? e.message : "Erro desconhecido no servidor.";
     return { sucesso: false, erro: mensagem };
@@ -181,5 +191,64 @@ export async function salvarMatrizNoCofreAction(input: SalvarMatrizInput) {
   } catch (e: unknown) {
     const mensagem = e instanceof Error ? e.message : "Erro inesperado ao salvar.";
     return { sucesso: false, erro: mensagem };
+  }
+}
+
+export async function excluirMatrizDoCofreAction(params: {
+  senhaMestre: string;
+  matrizId: number;
+}) {
+  const validacao = validarSenhaMestre(params.senhaMestre);
+  if (!validacao.ok) {
+    return { sucesso: false, erro: validacao.erro };
+  }
+
+  try {
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase
+      .from("matrizes")
+      .delete()
+      .eq("id", params.matrizId);
+
+    if (error) {
+      return { sucesso: false, erro: "Erro ao remover matriz: " + error.message };
+    }
+
+    const { data: matrizesAtualizadas } = await adminSupabase
+      .from("matrizes")
+      .select("id, nome_comercial, qtd_dezenas_escolhidas, qtd_cartoes_gerados, created_at, loterias(nome)")
+      .order("created_at", { ascending: false });
+
+    return {
+      sucesso: true,
+      matrizes: matrizesAtualizadas ?? [],
+    };
+  } catch (e: unknown) {
+    return {
+      sucesso: false,
+      erro: e instanceof Error ? e.message : "Erro inesperado ao remover.",
+    };
+  }
+}
+
+export async function sincronizar300ConcursosAction(senhaMestre: string) {
+  const validacao = validarSenhaMestre(senhaMestre);
+  if (!validacao.ok) {
+    return { sucesso: false, erro: validacao.erro };
+  }
+
+  try {
+    const relatorio = await sincronizarTodasAsLoterias300(false);
+    const statusResultados = await consultarStatusTabelas300();
+    return {
+      sucesso: true,
+      relatorio,
+      statusResultados,
+    };
+  } catch (e: unknown) {
+    return {
+      sucesso: false,
+      erro: e instanceof Error ? e.message : "Erro ao sincronizar concursos.",
+    };
   }
 }
