@@ -9,10 +9,13 @@ net.setDefaultAutoSelectFamily(false);
 
 let certsSistema: string[] | undefined;
 try {
-  if (typeof tls.getCACertificates === "function") {
+  const tlsAny = tls as unknown as {
+    getCACertificates?: (type: string) => string[];
+  };
+  if (typeof tlsAny.getCACertificates === "function") {
     certsSistema = [
-      ...tls.getCACertificates("default"),
-      ...tls.getCACertificates("system"),
+      ...tlsAny.getCACertificates("default"),
+      ...tlsAny.getCACertificates("system"),
     ];
   }
 } catch {

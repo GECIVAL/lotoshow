@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import GraficoMapaDezenas from "@/components/GraficoMapaDezenas";
 import Link from "next/link";
 import {
   calcularSimulacaoLotofacilAction,
@@ -264,7 +265,7 @@ export default function LotofacilPage() {
     <div className="min-h-screen flex flex-col bg-[#FAFAFA]">
       <Header />
 
-      <main className="flex-grow max-w-4xl mx-auto px-3 sm:px-4 py-6 w-full">
+      <main className="flex-grow max-w-6xl mx-auto px-3 sm:px-4 py-6 w-full">
         {/* Cabeçalho da Loteria + Indicador de Telas */}
         <div className="flex flex-col items-center mb-4">
           <div className="bg-[#8E44AD] text-white font-extrabold text-lg sm:text-2xl px-8 py-1.5 rounded-md shadow-sm tracking-wide">
@@ -458,14 +459,31 @@ export default function LotofacilPage() {
               </div>
             </div>
 
+            {/* Gráfico Interativo de Dezenas com Blocos Vermelhos e Somatórias de 30 e 100 Concursos */}
+            {concursosBanco.length > 0 && (
+              <GraficoMapaDezenas
+                tituloLoteria="Lotofácil"
+                totalDezenas={25}
+                blocoColunas={5}
+                concursosDesc={concursosBanco}
+                dezenasSelecionadas={dezenasEscolhidas}
+                qtdNecessaria={qtdNecessaria}
+                onAlternarDezena={alternarDezenaUsuario}
+                onIrParaProximoPasso={() => {
+                  setErroAviso(null);
+                  setTela(2);
+                }}
+              />
+            )}
+
             {/* Tabela de Concursos (Carregar junto com a 1ª Tela) */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5 overflow-hidden">
               <h3 className="text-sm font-bold text-gray-700 mb-3">
-                Últimos Concursos (Opcional: clique em Carregar para usar como resultado de teste)
+                Últimos Concursos Oficiais (Opcional: clique em Carregar para usar como resultado de teste)
               </h3>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-72">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead>
+                  <thead className="sticky top-0">
                     <tr className="bg-[#28A745] text-white">
                       <th className="p-2 rounded-tl-md">Ação</th>
                       <th className="p-2">Concurso</th>
@@ -483,7 +501,7 @@ export default function LotofacilPage() {
                         </td>
                       </tr>
                     ) : (
-                      concursosBanco.map((c) => (
+                      concursosBanco.slice(0, 20).map((c) => (
                         <tr key={c.concurso} className="hover:bg-gray-50">
                           <td className="p-2">
                             <button

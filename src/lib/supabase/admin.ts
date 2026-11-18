@@ -11,13 +11,17 @@ net.setDefaultAutoSelectFamily(false);
 // Carrega os certificados raiz confiáveis do próprio Windows (ex.: antivírus local com filtro HTTPS)
 let certificadosConfiaveis: string[] | undefined;
 try {
-  if (typeof tls.getCACertificates === "function") {
+  const tlsAny = tls as unknown as {
+    getCACertificates?: (type: string) => string[];
+    setDefaultCACertificates?: (certs: string[]) => void;
+  };
+  if (typeof tlsAny.getCACertificates === "function") {
     certificadosConfiaveis = [
-      ...tls.getCACertificates("default"),
-      ...tls.getCACertificates("system"),
+      ...tlsAny.getCACertificates("default"),
+      ...tlsAny.getCACertificates("system"),
     ];
-    if (typeof tls.setDefaultCACertificates === "function") {
-      tls.setDefaultCACertificates(certificadosConfiaveis);
+    if (typeof tlsAny.setDefaultCACertificates === "function") {
+      tlsAny.setDefaultCACertificates(certificadosConfiaveis);
     }
   }
 } catch {
@@ -72,7 +76,7 @@ async function fetchServidorResiliente(
     } else {
       bodyBuffer = Buffer.from(String(init.body), "utf8");
     }
-    if (!headersObj["content-length"] && !headersObj["Content-Length"]) {
+    if (bodyBuffer && !headersObj["content-length"] && !headersObj["Content-Length"]) {
       headersObj["Content-Length"] = String(bodyBuffer.byteLength);
     }
   }

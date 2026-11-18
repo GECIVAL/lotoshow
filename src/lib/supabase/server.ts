@@ -8,11 +8,15 @@ dns.setDefaultResultOrder('ipv4first')
 net.setDefaultAutoSelectFamily(false)
 
 try {
-  if (typeof tls.getCACertificates === 'function' && typeof tls.setDefaultCACertificates === 'function') {
-    tls.setDefaultCACertificates([
-      ...tls.getCACertificates('default'),
-      ...tls.getCACertificates('system'),
-    ])
+  const tlsAny = tls as unknown as {
+    getCACertificates?: (type: string) => string[];
+    setDefaultCACertificates?: (certs: string[]) => void;
+  };
+  if (typeof tlsAny.getCACertificates === 'function' && typeof tlsAny.setDefaultCACertificates === 'function') {
+    tlsAny.setDefaultCACertificates([
+      ...tlsAny.getCACertificates('default'),
+      ...tlsAny.getCACertificates('system'),
+    ]);
   }
 } catch {
   // Ignora caso o ambiente não suporte getCACertificates
