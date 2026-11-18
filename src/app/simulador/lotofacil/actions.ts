@@ -57,12 +57,12 @@ export async function carregarMatrizesLotofacilAction(): Promise<{
   try {
     const adminSupabase = createAdminClient();
 
-    // Carrega os últimos concursos oficiais da tabela exclusiva da Lotofácil (se já populada)
+    // Carrega os 300 últimos concursos oficiais da tabela exclusiva da Lotofácil
     const { data: resultadosDb } = await adminSupabase
       .from("resultados_lotofacil")
       .select("concurso, data_sorteio, dezenas")
       .order("concurso", { ascending: false })
-      .limit(20);
+      .limit(300);
 
     const concursosRecentes: ConcursoOficialLotofacil[] = (resultadosDb ?? []).map(
       (r) => ({
@@ -269,8 +269,14 @@ export async function verCartaoIndividualLotofacilAction(params: {
       };
     }
 
-    // Verifica se o usuário possui assinatura ativa (metadado ou futura tabela de assinaturas Mercado Pago)
-    const assinanteAtivo = Boolean(user.user_metadata?.assinante_ativo === true);
+    // Segurança Reforçada: Validação estrita via app_metadata (protegido pelo servidor)
+    // O app_metadata só pode ser alterado via service_role, impedindo que o usuário
+    // altere seu próprio status via DevTools/cliente Supabase.
+    const assinanteAtivo = Boolean(
+      user.app_metadata?.assinante_ativo === true ||
+      user.app_metadata?.plano === "vip" ||
+      user.app_metadata?.plano === "assinante"
+    );
 
     if (!assinanteAtivo) {
       return {
