@@ -145,12 +145,18 @@ export async function calcularSimulacaoLotofacilAction(params: {
   dezenasResultado: number[];
 }): Promise<ResultadoSimulacaoLotofacil> {
   try {
+    // Sanitização e validação estrita anti-injeção
+    const idMatrizSeguro = Number(params.matrizId);
+    if (!Number.isInteger(idMatrizSeguro) || idMatrizSeguro <= 0) {
+      return { sucesso: false, erro: "Identificador de matriz inválido." };
+    }
+
     const adminSupabase = createAdminClient();
 
     const { data: matriz, error } = await adminSupabase
       .from("matrizes")
       .select("id, qtd_dezenas_escolhidas, qtd_cartoes_gerados, dados_matriz")
-      .eq("id", params.matrizId)
+      .eq("id", idMatrizSeguro)
       .single();
 
     if (error || !matriz) {
@@ -286,11 +292,16 @@ export async function verCartaoIndividualLotofacilAction(params: {
       };
     }
 
+    const idMatrizSeguro = Number(params.matrizId);
+    if (!Number.isInteger(idMatrizSeguro) || idMatrizSeguro <= 0) {
+      return { autorizado: false, motivo: "ERRO", mensagem: "Identificador de matriz inválido." };
+    }
+
     const adminSupabase = createAdminClient();
     const { data: matriz, error } = await adminSupabase
       .from("matrizes")
       .select("id, qtd_dezenas_escolhidas, dados_matriz")
-      .eq("id", params.matrizId)
+      .eq("id", idMatrizSeguro)
       .single();
 
     if (error || !matriz) {

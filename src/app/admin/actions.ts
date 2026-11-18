@@ -132,10 +132,17 @@ export async function salvarMatrizNoCofreAction(input: SalvarMatrizInput) {
       };
     }
 
+    // Whitelist estrita de loterias permitidas (Anti-SQLi)
+    const LOTERIAS_VALIDAS = new Set(["Lotofacil", "MegaSena", "Quina", "Lotomania", "DiaDeSorte", "DuplaSena", "Timemania", "MaisMilionaria"]);
+    const loteriaLimpa = (input.loteria || "").trim();
+    if (!LOTERIAS_VALIDAS.has(loteriaLimpa)) {
+      return { sucesso: false, erro: "Identificador de loteria inválido." };
+    }
+
     const { data: loteriaData, error: loteriaError } = await adminSupabase
       .from("loterias")
       .select("id, dezenas_por_jogo")
-      .eq("nome", input.loteria)
+      .eq("nome", loteriaLimpa)
       .single();
 
     if (loteriaError || !loteriaData) {
@@ -204,11 +211,16 @@ export async function excluirMatrizDoCofreAction(params: {
   }
 
   try {
+    const matrizIdSeguro = Number(params.matrizId);
+    if (!Number.isInteger(matrizIdSeguro) || matrizIdSeguro <= 0) {
+      return { sucesso: false, erro: "Identificador de matriz inválido." };
+    }
+
     const adminSupabase = createAdminClient();
     const { error } = await adminSupabase
       .from("matrizes")
       .delete()
-      .eq("id", params.matrizId);
+      .eq("id", matrizIdSeguro);
 
     if (error) {
       return { sucesso: false, erro: "Erro ao remover matriz: " + error.message };
