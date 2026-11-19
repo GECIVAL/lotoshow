@@ -8,6 +8,12 @@ import {
   consultarStatusTabelas300,
   sincronizarTodasAsLoterias300,
 } from "@/lib/loterias/sincronizador";
+import {
+  criarCookieSessaoAdmin,
+  removerCookieSessaoAdmin,
+  verificarSessaoAdmin,
+} from "@/lib/admin/auth";
+import { obterMetricasFluxo } from "@/lib/telemetria/fluxo";
 
 /**
  * Obtém a Senha Mestre preservando caracteres especiais como # e $ no .env.local
@@ -263,4 +269,80 @@ export async function sincronizar300ConcursosAction(senhaMestre: string) {
       erro: e instanceof Error ? e.message : "Erro ao sincronizar concursos.",
     };
   }
+}
+
+/**
+ * Retorna as métricas de fluxo de visitantes, páginas acessadas e usuários cadastrados
+ */
+export async function obterMetricasPainelAdminAction() {
+  try {
+    const metricas = await obterMetricasFluxo();
+    const isAdmin = await verificarSessaoAdmin();
+    return {
+      sucesso: true,
+      isAdmin,
+      metricas,
+    };
+  } catch (e: unknown) {
+    return {
+      sucesso: false,
+      erro: e instanceof Error ? e.message : "Erro ao carregar métricas.",
+    };
+  }
+}
+
+/**
+ * Desbloqueia a Aba Especial (Cofre Master) ao digitar a Senha Mestre
+ * e ativa o cookie de passe livre de Administrador para todas as páginas.
+ */
+export async function desbloquearAbaEspecialAction(senhaMestre: string) {
+  const validacao = validarSenhaMestre(senhaMestre);
+  if (!validacao.ok) {
+    return { sucesso: false, erro: validacao.erro };
+  }
+
+  try {
+    // Ativa a sessão administrativa no navegador do ADM
+    await criarCookieSessaoAdmin(senhaMestre);
+
+    const adminSupabase = createAdminClient();
+
+    const { data: matrizes, error } = await adminSupabase
+      .from("matrizes")
+      .select("id, nome_comercial, qtd_dezenas_escolhidas, qtd_cartoes_gerados, created_at, loterias(nome)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return { sucesso: false, erro: "Erro ao consultar matrizes: " + error.message };
+    }
+
+    const statusResultados = await consultarStatusTabelas300();
+
+    return {
+      sucesso: true,
+      matrizes: matrizes ?? [],
+      statusResultados,
+    };
+  } catch (e: unknown) {
+    return {
+      sucesso: false,
+      erro: e instanceof Error ? e.message : "Erro desconhecido ao abrir a Aba Especial.",
+    };
+  }
+}
+
+/**
+ * Alterna ou encerra a sessão de Administrador no navegador
+ */
+export async function encerrarSessaoAdminAction() {
+  await removerCookieSessaoAdmin();
+  return { sucesso: true };
+}
+
+/**
+ * Checa se o usuário atual está com a sessão de Administrador ativa
+ */
+export async function checarStatusAdminAction() {
+  const isAdmin = await verificarSessaoAdmin();
+  return { isAdmin };
 }

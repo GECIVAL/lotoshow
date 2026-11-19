@@ -74,11 +74,12 @@ export async function carregarGraficoLoteriaAction(chaveLoteria: string) {
       data: { user },
     } = await supabaseAuth.auth.getUser();
 
-    // Bloqueio de segurança: Usuário DEVE estar logado para visualizar o gráfico oficial
+    // Bloqueio de segurança: TODOS devem estar logados, inclusive o Administrador
     if (!user) {
       return {
         sucesso: false,
         logado: false,
+        isAdmin: false,
         precisaLogar: true,
         config: cfg,
         concursos: [],

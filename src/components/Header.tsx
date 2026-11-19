@@ -1,14 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import RastreadorAcesso from "./RastreadorAcesso";
+import { checarStatusAdminAction } from "@/app/admin/actions";
 
 export default function Header() {
   const [menuAberto, setMenuAberto] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checarStatusAdminAction().then((res) => {
+      if (res?.isAdmin) setIsAdmin(true);
+    }).catch(() => {});
+  }, []);
 
   return (
     <header className="w-full bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+      <RastreadorAcesso />
+      {isAdmin && (
+        <div className="bg-amber-400 text-gray-950 px-4 py-1 text-xs font-black flex items-center justify-between tracking-wide shadow-inner">
+          <div className="flex items-center gap-2">
+            <span>👑 MODO ADMINISTRADOR ATIVO</span>
+            <span className="hidden sm:inline font-normal text-gray-800">| Acesso irrestrito a todas as páginas e simulações</span>
+          </div>
+          <Link
+            href="/admin"
+            className="underline hover:text-black font-extrabold text-[11px]"
+          >
+            Painel ADM →
+          </Link>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo ajustável para celular (h-9) e computador (h-12) */}
         <Link href="/" className="flex items-center shrink-0">
@@ -29,7 +53,7 @@ export default function Header() {
           <Link href="/#como-jogar" className="hover:text-[var(--gj-roxo)] transition-colors whitespace-nowrap">COMO JOGAR</Link>
           <Link href="/#jogos" className="hover:text-[var(--gj-roxo)] transition-colors whitespace-nowrap">JOGOS</Link>
           <Link href="/#planos" className="hover:text-[var(--gj-roxo)] transition-colors whitespace-nowrap">PLANOS</Link>
-          <Link href="/dashboard" className="hover:text-[var(--gj-roxo)] transition-colors whitespace-nowrap">ESTATÍSTICA</Link>
+          <Link href="/estatistica" className="hover:text-[var(--gj-roxo)] transition-colors whitespace-nowrap">ESTATÍSTICA</Link>
         </nav>
 
         {/* Botões de Ação + Botão Menu Celular/Tablet */}
@@ -80,7 +104,7 @@ export default function Header() {
             <Link href="/#como-jogar" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">COMO JOGAR</Link>
             <Link href="/#jogos" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">JOGOS</Link>
             <Link href="/#planos" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">PLANOS</Link>
-            <Link href="/dashboard" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">ESTATÍSTICA</Link>
+            <Link href="/estatistica" onClick={() => setMenuAberto(false)} className="hover:text-[var(--gj-roxo)]">ESTATÍSTICA</Link>
           </div>
         </nav>
       )}

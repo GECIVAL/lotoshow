@@ -267,17 +267,17 @@ export async function verCartaoIndividualLotofacilAction(params: {
       data: { user },
     } = await supabaseAuth.auth.getUser();
 
+    // Bloqueio: TODOS devem estar logados, inclusive o Administrador
     if (!user) {
       return {
         autorizado: false,
         motivo: "NAO_LOGADO",
-        mensagem: "Faça login ou crie sua conta e assine um plano para visualizar os cartões.",
+        mensagem: "Faça login ou crie sua conta para visualizar os cartões.",
       };
     }
 
-    // Segurança Reforçada: Validação estrita via app_metadata (protegido pelo servidor)
-    // O app_metadata só pode ser alterado via service_role, impedindo que o usuário
-    // altere seu próprio status via DevTools/cliente Supabase.
+    // Validação estrita via app_metadata (protegido pelo servidor)
+    // Administrador também deve ter assinatura ativa para ver cartões de outros usuários
     const assinanteAtivo = Boolean(
       user.app_metadata?.assinante_ativo === true ||
       user.app_metadata?.plano === "vip" ||
